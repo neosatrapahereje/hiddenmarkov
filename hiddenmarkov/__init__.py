@@ -127,10 +127,6 @@ def viterbi_algorithm(hmm, observations, log_probabilities=True):
     else:
         omega[0, :] = obs_prob * hmm.transition_model.init_distribution
 
-    # Initialize path
-    for i in range(hmm.n_states):
-        path[i].append(i)
-
     # Viterbi recursion
     for i, obs in enumerate(observations[1:], 1):
         obs_prob = hmm.observation_model(obs)
@@ -156,10 +152,23 @@ def viterbi_algorithm(hmm, observations, log_probabilities=True):
     # Get index of the best state
     best_sequence_idx = omega[-1, :].argmax()
     # Get best path (backtracking!)
-    best_sequence = np.array(path[best_sequence_idx][::-1], dtype=int)
+
+
+    # Get index of the best state
+    best_sequence_idx = omega[-1, :].argmax()
+    # likelihood of the path
+    path_likelihood = omega[-1, best_sequence_idx]
+    # follow the best path backwards
+    seq = [best_sequence_idx]
+    for s in range(len(path[best_sequence_idx])):
+        best_sequence_idx = path[best_sequence_idx][-(s+1)]
+        seq.append(best_sequence_idx)
+    # invert the path
+    best_sequence = np.array(seq[::-1], dtype=int)
+    
     if hmm.state_space is not None:
         best_sequence = hmm.state_space[best_sequence]
-    # likelihood of the path
+    
     path_likelihood = omega[-1, best_sequence_idx]
 
     return best_sequence, path_likelihood
