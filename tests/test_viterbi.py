@@ -29,13 +29,14 @@ class TestViterbi(unittest.TestCase):
         hmm = HMM(observation_model, transition_model, state_space=states)
 
         path, prob = hmm.find_best_sequence(obs, log_probabilities=False)
+        print("Example Wikipedia")
+        print("Best sequence", path)
+        print("Expected Sequence", ["Healthy", "Healthy", "Fever"])
+        print("Sequence probability", prob)
 
         self.assertTrue(all(path == ["Healthy", "Healthy", "Fever"]))
         self.assertTrue(np.isclose(prob, 0.01512, atol=1e-5))
 
-        print("Example Wikipedia")
-        print("Best sequence", path)
-        print("Sequence probability", prob)
 
     def test_upenn(self):
         """
@@ -67,10 +68,11 @@ class TestViterbi(unittest.TestCase):
 
         observation = ["G", "G", "C", "A", "C", "T", "G", "A", "A"]
         path, prob = hmm.find_best_sequence(observation, log_probabilities=False)
+        print("Example Viterbi-DNA UPenn")
+        print("Best sequence", path)
+        print("Expected sequence", ['H', 'H', 'H', 'L', 'L', 'L', 'L', 'L', 'L'])
+        print("Sequence probability", prob)
 
         self.assertTrue(all(path == ['H', 'H', 'H', 'L', 'L', 'L', 'L', 'L', 'L']))
         self.assertTrue(np.isclose(prob, 4.25e-8))
 
-        print("Example Viterbi-DNA UPenn")
-        print("Best sequence", path)
-        print("Sequence probability", prob)

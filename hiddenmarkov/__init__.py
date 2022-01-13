@@ -149,11 +149,7 @@ def viterbi_algorithm(hmm, observations, log_probabilities=True):
             # keep track of the best state
             path[j].append(state)
 
-    # Get index of the best state
-    best_sequence_idx = omega[-1, :].argmax()
     # Get best path (backtracking!)
-
-
     # Get index of the best state
     best_sequence_idx = omega[-1, :].argmax()
     # likelihood of the path
@@ -165,13 +161,12 @@ def viterbi_algorithm(hmm, observations, log_probabilities=True):
         seq.append(best_sequence_idx)
     # invert the path
     best_sequence = np.array(seq[::-1], dtype=int)
-    
+
     if hmm.state_space is not None:
         best_sequence = hmm.state_space[best_sequence]
-    
-    path_likelihood = omega[-1, best_sequence_idx]
 
     return best_sequence, path_likelihood
+
 
 def viterbi_algorithm_optimized(hmm, observations, log_probabilities=True):
     """
@@ -206,7 +201,7 @@ def viterbi_algorithm_optimized(hmm, observations, log_probabilities=True):
     omega = np.zeros((len(observations), hmm.n_states))
     # Initialize matrix for holding the best sub-sequence idx
     omega_idx = np.zeros((len(observations), hmm.n_states), dtype=int)
-   
+
     # Initiate for i == 0
     obs_prob = hmm.observation_model(observations[0])
 
@@ -216,7 +211,7 @@ def viterbi_algorithm_optimized(hmm, observations, log_probabilities=True):
         omega[0, :] = obs_prob * hmm.transition_model.init_distribution
 
     omega_idx[0, :] = 0
-   
+
     # Viterbi recursion
     if log_probabilities:
         for i, obs in enumerate(observations[1:], 1):
@@ -227,7 +222,7 @@ def viterbi_algorithm_optimized(hmm, observations, log_probabilities=True):
             prob = prob_of_jump_to_state[np.arange(hmm.n_states),state]
             omega[i, :] = obs_prob + prob
             omega_idx[i, :] = state
-        
+
     else:
         for i, obs in enumerate(observations[1:], 1):
             obs_prob = hmm.observation_model(obs)
@@ -237,7 +232,7 @@ def viterbi_algorithm_optimized(hmm, observations, log_probabilities=True):
             prob = prob_of_jump_to_state[np.arange(hmm.n_states),state]
             omega[i, :] = obs_prob * prob
             omega_idx[i, :] = state
-    
+
     # Get index of the best state
     best_sequence_idx = omega[-1, :].argmax()
     # likelihood of the path
