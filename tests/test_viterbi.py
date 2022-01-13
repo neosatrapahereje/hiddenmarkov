@@ -6,7 +6,6 @@ from hiddenmarkov import HMM, ConstantTransitionModel, CategoricalStringObservat
 
 
 class TestViterbi(unittest.TestCase):
-
     def test_wikipedia(self):
         obs = ("normal", "cold", "dizzy")
         states = ("Healthy", "Fever")
@@ -39,7 +38,11 @@ class TestViterbi(unittest.TestCase):
         print("Sequence probability", prob)
 
     def test_upenn(self):
-        # Example taken from https://www.cis.upenn.edu/~cis262/notes/Example-Viterbi-DNA.pdf
+        """
+        Example taken from
+        https://www.cis.upenn.edu/~cis262/notes/Example-Viterbi-DNA.pdf
+        """
+
         obs = ("A", "C", "G", "T")
         states = ("H", "L")
         observation_probabilities = np.array([[0.2, 0.3],
