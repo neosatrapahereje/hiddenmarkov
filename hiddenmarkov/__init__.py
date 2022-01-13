@@ -173,6 +173,86 @@ def viterbi_algorithm(hmm, observations, log_probabilities=True):
 
     return best_sequence, path_likelihood
 
+def viterbi_algorithm_optimized(hmm, observations, log_probabilities=True):
+    """
+    Find the most probable sequence of latent variables given
+    a sequence of observations
+
+    Parameters
+    ----------
+    observations: iterable
+       An iterable containing observations. The type of each
+       element depends on input types accepted by the
+       `hmm.observation_model`
+    log_probabilities: Bool (optional)
+       If True, uses log probabilities to compute the Viterbi
+       recursion (better for numerical stability). Default is True.
+
+    Returns
+    -------
+    path: np.ndarray
+        The most probable sequence of latent variables
+    likelihood: float
+        The likelihood (either the probability or the
+        log proability if `log_probabilities` is True)
+        of the best sequence.
+    """
+    # Set whether to use log probabilities in transition and
+    # observation models
+    hmm.transition_model.use_log_probabilities = log_probabilities
+    hmm.observation_model.use_log_probabilities = log_probabilities
+    # Initialize matrix for holding the best sub-sequence
+    # (log-)likelihood
+    omega = np.zeros((len(observations), hmm.n_states))
+    # Initialize matrix for holding the best sub-sequence idx
+    omega_idx = np.zeros((len(observations), hmm.n_states), dtype=int)
+   
+    # Initiate for i == 0
+    obs_prob = hmm.observation_model(observations[0])
+
+    if log_probabilities:
+        omega[0, :] = obs_prob + hmm.transition_model.init_distribution
+    else:
+        omega[0, :] = obs_prob * hmm.transition_model.init_distribution
+
+    omega_idx[0, :] = 0
+   
+    # Viterbi recursion
+    if log_probabilities:
+        for i, obs in enumerate(observations[1:], 1):
+            obs_prob = hmm.observation_model(obs)
+            # omega is a row vector, transition_model is a matrix
+            prob_of_jump_to_state = omega[i - 1, :] + hmm.transition_model()
+            state = np.argmax(prob_of_jump_to_state, axis = 1)
+            prob = prob_of_jump_to_state[np.arange(hmm.n_states),state]
+            omega[i, :] = obs_prob + prob
+            omega_idx[i, :] = state
+        
+    else:
+        for i, obs in enumerate(observations[1:], 1):
+            obs_prob = hmm.observation_model(obs)
+            # omega is a row vector, transition_model is a matrix
+            prob_of_jump_to_state = omega[i - 1, :] * hmm.transition_model()
+            state = np.argmax(prob_of_jump_to_state, axis = 1)
+            prob = prob_of_jump_to_state[np.arange(hmm.n_states),state]
+            omega[i, :] = obs_prob * prob
+            omega_idx[i, :] = state
+    
+    # Get index of the best state
+    best_sequence_idx = omega[-1, :].argmax()
+    # likelihood of the path
+    path_likelihood = omega[-1, best_sequence_idx]
+    # Get best path (backtracking!)
+    seq = [best_sequence_idx]
+    for s in range(len(observations) - 1):
+        best_sequence_idx = omega_idx[-(s+1), best_sequence_idx]
+        seq.append(best_sequence_idx)
+    best_sequence = np.array(seq[::-1], dtype=int)
+    if hmm.state_space is not None:
+        best_sequence = hmm.state_space[best_sequence]
+
+    return best_sequence, path_likelihood
+
 
 class ConstantTransitionModel(object):
     """
