@@ -2,12 +2,13 @@ import unittest
 
 import numpy as np
 
-from hiddenmarkov import HMM, ConstantTransitionModel, CategoricalStringObservationModel
+from hiddenmarkov import HMM, ConstantTransitionModel, CategoricalStringObservationModel, viterbi_algorithm
 
 
 class TestViterbi(unittest.TestCase):
     def test_wikipedia(self):
         obs = ("normal", "cold", "dizzy")
+        observations = ("normal", "cold", "dizzy")
         states = ("Healthy", "Fever")
         observation_probabilities = np.array([[0.5, 0.1],
                                               [0.4, 0.3],
@@ -28,7 +29,7 @@ class TestViterbi(unittest.TestCase):
 
         hmm = HMM(observation_model, transition_model, state_space=states)
 
-        path, prob = hmm.find_best_sequence(obs, log_probabilities=False)
+        path, prob = viterbi_algorithm(hmm, observations, log_probabilities=False)
         print("Example Wikipedia")
         print("Best sequence", path)
         print("Expected Sequence", ["Healthy", "Healthy", "Fever"])
@@ -66,8 +67,8 @@ class TestViterbi(unittest.TestCase):
 
         hmm = HMM(observation_model, transition_model, state_space=states)
 
-        observation = ["G", "G", "C", "A", "C", "T", "G", "A", "A"]
-        path, prob = hmm.find_best_sequence(observation, log_probabilities=False)
+        observations = ["G", "G", "C", "A", "C", "T", "G", "A", "A"]
+        path, prob = viterbi_algorithm(hmm, observations, log_probabilities=False)
         print("Example Viterbi-DNA UPenn")
         print("Best sequence", path)
         print("Expected sequence", ['H', 'H', 'H', 'L', 'L', 'L', 'L', 'L', 'L'])

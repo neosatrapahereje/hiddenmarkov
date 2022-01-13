@@ -74,7 +74,7 @@ class HiddenMarkovModel(object):
             self.state_space = np.arange(self.n_states)
 
     def find_best_sequence(self, observations, log_probabilities=True):
-        best_sequence, sequence_likelihood = viterbi_algorithm_optimized(
+        best_sequence, sequence_likelihood = viterbi_algorithm(
             hmm=self,
             observations=observations,
             log_probabilities=log_probabilities)
@@ -85,7 +85,7 @@ class HiddenMarkovModel(object):
 HMM = HiddenMarkovModel
 
 
-def viterbi_algorithm(hmm, observations, log_probabilities=True):
+def viterbi_algorithm_naive(hmm, observations, log_probabilities=True):
     """
     Find the most probable sequence of latent variables given
     a sequence of observations
@@ -108,6 +108,10 @@ def viterbi_algorithm(hmm, observations, log_probabilities=True):
         The likelihood (either the probability or the
         log proability if `log_probabilities` is True)
         of the best sequence.
+
+    Note
+    ----
+    This is a naïve implementation, mostly for educational purposes!
     """
     # Set whether to use log probabilities in transition and
     # observation models
@@ -168,7 +172,7 @@ def viterbi_algorithm(hmm, observations, log_probabilities=True):
     return best_sequence, path_likelihood
 
 
-def viterbi_algorithm_optimized(hmm, observations, log_probabilities=True):
+def viterbi_algorithm(hmm, observations, log_probabilities=True):
     """
     Find the most probable sequence of latent variables given
     a sequence of observations
