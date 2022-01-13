@@ -74,7 +74,7 @@ class HiddenMarkovModel(object):
             self.state_space = np.arange(self.n_states)
 
     def find_best_sequence(self, observations, log_probabilities=True):
-        best_sequence, sequence_likelihood = viterbi_algorithm(
+        best_sequence, sequence_likelihood = viterbi_algorithm_optimized(
             hmm=self,
             observations=observations,
             log_probabilities=log_probabilities)
@@ -216,23 +216,26 @@ def viterbi_algorithm_optimized(hmm, observations, log_probabilities=True):
     if log_probabilities:
         for i, obs in enumerate(observations[1:], 1):
             obs_prob = hmm.observation_model(obs)
-            # omega is a row vector, transition_model is a matrix
-            prob_of_jump_to_state = omega[i - 1, :] + hmm.transition_model()
+            # omega slice is a row vector, transition_model is a matrix 
+            # of prob from state id_row to state id_column
+            prob_of_jump_to_state = omega[i - 1, :] + hmm.transition_model().T
             state = np.argmax(prob_of_jump_to_state, axis = 1)
             prob = prob_of_jump_to_state[np.arange(hmm.n_states),state]
             omega[i, :] = obs_prob + prob
             omega_idx[i, :] = state
-
+            
     else:
         for i, obs in enumerate(observations[1:], 1):
             obs_prob = hmm.observation_model(obs)
-            # omega is a row vector, transition_model is a matrix
-            prob_of_jump_to_state = omega[i - 1, :] * hmm.transition_model()
+            # omega slice is a row vector, transition_model is a matrix 
+            # of prob from state id_row to state id_column
+            prob_of_jump_to_state = omega[i - 1, :] * hmm.transition_model().T
             state = np.argmax(prob_of_jump_to_state, axis = 1)
             prob = prob_of_jump_to_state[np.arange(hmm.n_states),state]
             omega[i, :] = obs_prob * prob
             omega_idx[i, :] = state
 
+    # Get best path (backtracking!)
     # Get index of the best state
     best_sequence_idx = omega[-1, :].argmax()
     # likelihood of the path
