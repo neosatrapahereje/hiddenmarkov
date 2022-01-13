@@ -17,6 +17,7 @@ class TransitionModel(object):
     """
     Base class for implementing a Transition Model
     """
+
     def __init__(self, use_log_probabilities=True):
         self.use_log_probabilities = use_log_probabilities
 
@@ -28,6 +29,7 @@ class ObservationModel(object):
     """
     Base class for implementing an Observation Model
     """
+
     def __init__(self, use_log_probabilities=True):
         self.use_log_probabilities = use_log_probabilities
 
@@ -62,8 +64,7 @@ class HiddenMarkovModel(object):
     * Add forward algorithm
     """
 
-    def __init__(self, observation_model,
-                 transition_model, state_space=None):
+    def __init__(self, observation_model, transition_model, state_space=None):
 
         self.observation_model = observation_model
         self.transition_model = transition_model
@@ -75,9 +76,8 @@ class HiddenMarkovModel(object):
 
     def find_best_sequence(self, observations, log_probabilities=True):
         best_sequence, sequence_likelihood = viterbi_algorithm(
-            hmm=self,
-            observations=observations,
-            log_probabilities=log_probabilities)
+            hmm=self, observations=observations, log_probabilities=log_probabilities
+        )
         return best_sequence, sequence_likelihood
 
 
@@ -137,17 +137,21 @@ def viterbi_algorithm_naive(hmm, observations, log_probabilities=True):
         for j in range(hmm.n_states):
             if log_probabilities:
                 prob, state = max(
-                    [(omega[i - 1, k] + hmm.transition_model(k, j), k)
-                     for k in range(hmm.n_states)],
-                    key=lambda x: x[0]
+                    [
+                        (omega[i - 1, k] + hmm.transition_model(k, j), k)
+                        for k in range(hmm.n_states)
+                    ],
+                    key=lambda x: x[0],
                 )
                 omega[i, j] = obs_prob[j] + prob
 
             else:
                 prob, state = max(
-                    [(omega[i - 1, k] * hmm.transition_model(k, j), k)
-                     for k in range(hmm.n_states)],
-                    key=lambda x: x[0]
+                    [
+                        (omega[i - 1, k] * hmm.transition_model(k, j), k)
+                        for k in range(hmm.n_states)
+                    ],
+                    key=lambda x: x[0],
                 )
                 omega[i, j] = obs_prob[j] * prob
             # keep track of the best state
@@ -161,7 +165,7 @@ def viterbi_algorithm_naive(hmm, observations, log_probabilities=True):
     # follow the best path backwards
     seq = [best_sequence_idx]
     for s in range(len(path[best_sequence_idx])):
-        best_sequence_idx = path[best_sequence_idx][-(s+1)]
+        best_sequence_idx = path[best_sequence_idx][-(s + 1)]
         seq.append(best_sequence_idx)
     # invert the path
     best_sequence = np.array(seq[::-1], dtype=int)
@@ -220,22 +224,22 @@ def viterbi_algorithm(hmm, observations, log_probabilities=True):
     if log_probabilities:
         for i, obs in enumerate(observations[1:], 1):
             obs_prob = hmm.observation_model(obs)
-            # omega slice is a row vector, transition_model is a matrix 
+            # omega slice is a row vector, transition_model is a matrix
             # of prob from state id_row to state id_column
             prob_of_jump_to_state = omega[i - 1, :] + hmm.transition_model().T
-            state = np.argmax(prob_of_jump_to_state, axis = 1)
-            prob = prob_of_jump_to_state[np.arange(hmm.n_states),state]
+            state = np.argmax(prob_of_jump_to_state, axis=1)
+            prob = prob_of_jump_to_state[np.arange(hmm.n_states), state]
             omega[i, :] = obs_prob + prob
             omega_idx[i, :] = state
-            
+
     else:
         for i, obs in enumerate(observations[1:], 1):
             obs_prob = hmm.observation_model(obs)
-            # omega slice is a row vector, transition_model is a matrix 
+            # omega slice is a row vector, transition_model is a matrix
             # of prob from state id_row to state id_column
             prob_of_jump_to_state = omega[i - 1, :] * hmm.transition_model().T
-            state = np.argmax(prob_of_jump_to_state, axis = 1)
-            prob = prob_of_jump_to_state[np.arange(hmm.n_states),state]
+            state = np.argmax(prob_of_jump_to_state, axis=1)
+            prob = prob_of_jump_to_state[np.arange(hmm.n_states), state]
             omega[i, :] = obs_prob * prob
             omega_idx[i, :] = state
 
@@ -247,7 +251,7 @@ def viterbi_algorithm(hmm, observations, log_probabilities=True):
     # Get best path (backtracking!)
     seq = [best_sequence_idx]
     for s in range(len(observations) - 1):
-        best_sequence_idx = omega_idx[-(s+1), best_sequence_idx]
+        best_sequence_idx = omega_idx[-(s + 1), best_sequence_idx]
         seq.append(best_sequence_idx)
     best_sequence = np.array(seq[::-1], dtype=int)
     if hmm.state_space is not None:
@@ -283,12 +287,12 @@ class ConstantTransitionModel(object):
     """
 
     def __init__(
-            self,
-            transition_probabilities,
-            init_distribution=None,
-            normalize_init_distribution=False,
-            normalize_transition_probabilities=False,
-            use_log_probabilities=True
+        self,
+        transition_probabilities,
+        init_distribution=None,
+        normalize_init_distribution=False,
+        normalize_transition_probabilities=False,
+        use_log_probabilities=True,
     ):
         super().__init__()
         self.use_log_probabilities = use_log_probabilities
@@ -297,22 +301,18 @@ class ConstantTransitionModel(object):
 
         if init_distribution is None:
             self.init_distribution = (
-                1.0 / float(self.n_states) *
-                np.ones(self.n_states, dtype=float)
+                1.0 / float(self.n_states) * np.ones(self.n_states, dtype=float)
             )
         else:
             self.init_distribution = init_distribution
 
         if normalize_init_distribution:
             # Normalize initial distribution
-            self.init_distribution /= np.maximum(
-                np.sum(self.init_distribution), 1e-10
-            )
+            self.init_distribution /= np.maximum(np.sum(self.init_distribution), 1e-10)
 
         if normalize_transition_probabilities:
             self.transition_probabilities /= np.sum(
-                self.transition_probabilities, 1,
-                keepdims=True
+                self.transition_probabilities, 1, keepdims=True
             )
 
     @property
@@ -351,12 +351,8 @@ class ConstantTransitionModel(object):
 
 
 class CategoricalStringObservationModel(ObservationModel):
-
     def __init__(
-            self,
-            observation_probabilities,
-            observations=None,
-            use_log_probabilities=True
+        self, observation_probabilities, observations=None, use_log_probabilities=True
     ):
         super().__init__(use_log_probabilities=use_log_probabilities)
 
@@ -365,9 +361,7 @@ class CategoricalStringObservationModel(ObservationModel):
         if observations is not None:
             self.observations = list(observations)
         else:
-            self.observations = [
-                str(i) for i in range(len(observation_probabilities))
-            ]
+            self.observations = [str(i) for i in range(len(observation_probabilities))]
 
     @property
     def observation_probabilities(self):
