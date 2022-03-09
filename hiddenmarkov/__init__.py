@@ -6,8 +6,8 @@ This module contains case classes to define Hidden Markov Models.
 """
 import pkg_resources
 
-import numpy as np
 from collections import defaultdict
+import numpy as np
 
 # define a version variable
 __version__ = pkg_resources.get_distribution("hiddenmarkov").version

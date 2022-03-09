@@ -2,7 +2,12 @@ import unittest
 
 import numpy as np
 
-from hiddenmarkov import HMM, ConstantTransitionModel, CategoricalStringObservationModel, viterbi_algorithm
+from hiddenmarkov import (
+    HMM,
+    ConstantTransitionModel,
+    CategoricalStringObservationModel,
+    viterbi_algorithm
+)
 
 
 class TestViterbi(unittest.TestCase):
@@ -10,22 +15,18 @@ class TestViterbi(unittest.TestCase):
         obs = ("normal", "cold", "dizzy")
         observations = ("normal", "cold", "dizzy")
         states = ("Healthy", "Fever")
-        observation_probabilities = np.array([[0.5, 0.1],
-                                              [0.4, 0.3],
-                                              [0.1, 0.6]])
-        transition_probabilities = np.array([[0.7, 0.3],
-                                             [0.4, 0.6]])
+        observation_probabilities = np.array([[0.5, 0.1], [0.4, 0.3], [0.1, 0.6]])
+        transition_probabilities = np.array([[0.7, 0.3], [0.4, 0.6]])
 
         observation_model = CategoricalStringObservationModel(
-            observation_probabilities,
-            obs
+            observation_probabilities, obs
         )
 
         init_distribution = np.array([0.6, 0.4])
 
         transition_model = ConstantTransitionModel(
-            transition_probabilities,
-            init_distribution)
+            transition_probabilities, init_distribution
+        )
 
         hmm = HMM(observation_model, transition_model, state_space=states)
 
@@ -38,7 +39,6 @@ class TestViterbi(unittest.TestCase):
         self.assertTrue(all(path == ["Healthy", "Healthy", "Fever"]))
         self.assertTrue(np.isclose(prob, 0.01512, atol=1e-5))
 
-
     def test_upenn(self):
         """
         Example taken from
@@ -47,23 +47,20 @@ class TestViterbi(unittest.TestCase):
 
         obs = ("A", "C", "G", "T")
         states = ("H", "L")
-        observation_probabilities = np.array([[0.2, 0.3],
-                                              [0.3, 0.2],
-                                              [0.3, 0.2],
-                                              [0.2, 0.3]])
-        transition_probabilities = np.array([[0.5, 0.5],
-                                             [0.4, 0.6]])
+        observation_probabilities = np.array(
+            [[0.2, 0.3], [0.3, 0.2], [0.3, 0.2], [0.2, 0.3]]
+        )
+        transition_probabilities = np.array([[0.5, 0.5], [0.4, 0.6]])
 
         observation_model = CategoricalStringObservationModel(
-            observation_probabilities,
-            obs
+            observation_probabilities, obs
         )
 
         init_distribution = np.array([0.5, 0.5])
 
         transition_model = ConstantTransitionModel(
-            transition_probabilities,
-            init_distribution)
+            transition_probabilities, init_distribution
+        )
 
         hmm = HMM(observation_model, transition_model, state_space=states)
 
@@ -71,9 +68,8 @@ class TestViterbi(unittest.TestCase):
         path, prob = viterbi_algorithm(hmm, observations, log_probabilities=False)
         print("Example Viterbi-DNA UPenn")
         print("Best sequence", path)
-        print("Expected sequence", ['H', 'H', 'H', 'L', 'L', 'L', 'L', 'L', 'L'])
+        print("Expected sequence", ["H", "H", "H", "L", "L", "L", "L", "L", "L"])
         print("Sequence probability", prob)
 
-        self.assertTrue(all(path == ['H', 'H', 'H', 'L', 'L', 'L', 'L', 'L', 'L']))
+        self.assertTrue(all(path == ["H", "H", "H", "L", "L", "L", "L", "L", "L"]))
         self.assertTrue(np.isclose(prob, 4.25e-8))
-
