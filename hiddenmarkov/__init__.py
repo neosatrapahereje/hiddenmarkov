@@ -8,6 +8,7 @@ import pkg_resources
 import warnings
 import numpy as np
 from collections import defaultdict
+import numpy as np
 
 # define a version variable
 __version__ = pkg_resources.get_distribution("hiddenmarkov").version
@@ -17,6 +18,7 @@ class TransitionModel(object):
     """
     Base class for implementing a Transition Model
     """
+
     def __init__(self, use_log_probabilities=True):
         self.use_log_probabilities = use_log_probabilities
 
@@ -28,6 +30,7 @@ class ObservationModel(object):
     """
     Base class for implementing an Observation Model
     """
+
     def __init__(self, use_log_probabilities=True):
         self.use_log_probabilities = use_log_probabilities
 
@@ -79,13 +82,13 @@ class HiddenMarkovModel(object):
                            log_probabilities=True,
                            viterbi="optimized"):
         if viterbi == "optimized":
-            viterbi_fun = viterbi_algorithm_optimized
-        elif viterbi == "windowed":
-            viterbi_fun = viterbi_algorithm_optimized_windowed
-        elif viterbi == "legacy":
             viterbi_fun = viterbi_algorithm
+        elif viterbi == "windowed":
+            viterbi_fun = viterbi_algorithm_windowed
+        elif viterbi == "naive":
+            viterbi_fun = viterbi_algorithm_naive
         else:
-            warnings.warn("viterbi needs to be 'optimized', 'windowed', or 'legacy'")
+            warnings.warn("viterbi needs to be 'optimized', 'windowed', or 'naive'")
             return
         best_sequence, sequence_likelihood = viterbi_fun(
             hmm=self,
@@ -97,7 +100,7 @@ class HiddenMarkovModel(object):
 HMM = HiddenMarkovModel
 
 
-def viterbi_algorithm(hmm, observations, log_probabilities=True):
+def viterbi_algorithm_naive(hmm, observations, log_probabilities=True):
     """
     Find the most probable sequence of latent variables given
     a sequence of observations
@@ -120,6 +123,10 @@ def viterbi_algorithm(hmm, observations, log_probabilities=True):
         The likelihood (either the probability or the
         log proability if `log_probabilities` is True)
         of the best sequence.
+
+    Note
+    ----
+    This is a naïve implementation, mostly for educational purposes!
     """
     # Set whether to use log probabilities in transition and
     # observation models
@@ -145,17 +152,21 @@ def viterbi_algorithm(hmm, observations, log_probabilities=True):
         for j in range(hmm.n_states):
             if log_probabilities:
                 prob, state = max(
-                    [(omega[i - 1, k] + hmm.transition_model(k, j), k)
-                     for k in range(hmm.n_states)],
-                    key=lambda x: x[0]
+                    [
+                        (omega[i - 1, k] + hmm.transition_model(k, j), k)
+                        for k in range(hmm.n_states)
+                    ],
+                    key=lambda x: x[0],
                 )
                 omega[i, j] = obs_prob[j] + prob
 
             else:
                 prob, state = max(
-                    [(omega[i - 1, k] * hmm.transition_model(k, j), k)
-                     for k in range(hmm.n_states)],
-                    key=lambda x: x[0]
+                    [
+                        (omega[i - 1, k] * hmm.transition_model(k, j), k)
+                        for k in range(hmm.n_states)
+                    ],
+                    key=lambda x: x[0],
                 )
                 omega[i, j] = obs_prob[j] * prob
             # keep track of the best state
@@ -169,7 +180,7 @@ def viterbi_algorithm(hmm, observations, log_probabilities=True):
     # follow the best path backwards
     seq = [best_sequence_idx]
     for s in range(len(path[best_sequence_idx])):
-        best_sequence_idx = path[best_sequence_idx][-(s+1)]
+        best_sequence_idx = path[best_sequence_idx][-(s + 1)]
         seq.append(best_sequence_idx)
     # invert the path
     best_sequence = np.array(seq[::-1], dtype=int)
@@ -180,7 +191,7 @@ def viterbi_algorithm(hmm, observations, log_probabilities=True):
     return best_sequence, path_likelihood
 
 
-def viterbi_algorithm_optimized(hmm, observations, log_probabilities=True):
+def viterbi_algorithm(hmm, observations, log_probabilities=True):
     """
     Find the most probable sequence of latent variables given
     a sequence of observations
@@ -228,22 +239,22 @@ def viterbi_algorithm_optimized(hmm, observations, log_probabilities=True):
     if log_probabilities:
         for i, obs in enumerate(observations[1:], 1):
             obs_prob = hmm.observation_model(obs)
-            # omega slice is a row vector, transition_model is a matrix 
+            # omega slice is a row vector, transition_model is a matrix
             # of prob from state id_row to state id_column
             prob_of_jump_to_state = omega[i - 1, :] + hmm.transition_model().T
-            state = np.argmax(prob_of_jump_to_state, axis = 1)
-            prob = prob_of_jump_to_state[np.arange(hmm.n_states),state]
+            state = np.argmax(prob_of_jump_to_state, axis=1)
+            prob = prob_of_jump_to_state[np.arange(hmm.n_states), state]
             omega[i, :] = obs_prob + prob
             omega_idx[i, :] = state
-            
+
     else:
         for i, obs in enumerate(observations[1:], 1):
             obs_prob = hmm.observation_model(obs)
-            # omega slice is a row vector, transition_model is a matrix 
+            # omega slice is a row vector, transition_model is a matrix
             # of prob from state id_row to state id_column
             prob_of_jump_to_state = omega[i - 1, :] * hmm.transition_model().T
-            state = np.argmax(prob_of_jump_to_state, axis = 1)
-            prob = prob_of_jump_to_state[np.arange(hmm.n_states),state]
+            state = np.argmax(prob_of_jump_to_state, axis=1)
+            prob = prob_of_jump_to_state[np.arange(hmm.n_states), state]
             omega[i, :] = obs_prob * prob
             omega_idx[i, :] = state
 
@@ -255,7 +266,7 @@ def viterbi_algorithm_optimized(hmm, observations, log_probabilities=True):
     # Get best path (backtracking!)
     seq = [best_sequence_idx]
     for s in range(len(observations) - 1):
-        best_sequence_idx = omega_idx[-(s+1), best_sequence_idx]
+        best_sequence_idx = omega_idx[-(s + 1), best_sequence_idx]
         seq.append(best_sequence_idx)
     best_sequence = np.array(seq[::-1], dtype=int)
     if hmm.state_space is not None:
@@ -264,7 +275,7 @@ def viterbi_algorithm_optimized(hmm, observations, log_probabilities=True):
     return best_sequence, path_likelihood
 
 
-def viterbi_algorithm_optimized_windowed(hmm, 
+def viterbi_algorithm_windowed(hmm, 
                                          observations, 
                                          log_probabilities=True):
     """
@@ -405,12 +416,12 @@ class ConstantTransitionModel(object):
     """
 
     def __init__(
-            self,
-            transition_probabilities,
-            init_distribution=None,
-            normalize_init_distribution=False,
-            normalize_transition_probabilities=False,
-            use_log_probabilities=True
+        self,
+        transition_probabilities,
+        init_distribution=None,
+        normalize_init_distribution=False,
+        normalize_transition_probabilities=False,
+        use_log_probabilities=True,
     ):
         super().__init__()
         self.use_log_probabilities = use_log_probabilities
@@ -419,22 +430,18 @@ class ConstantTransitionModel(object):
 
         if init_distribution is None:
             self.init_distribution = (
-                1.0 / float(self.n_states) *
-                np.ones(self.n_states, dtype=float)
+                1.0 / float(self.n_states) * np.ones(self.n_states, dtype=float)
             )
         else:
             self.init_distribution = init_distribution
 
         if normalize_init_distribution:
             # Normalize initial distribution
-            self.init_distribution /= np.maximum(
-                np.sum(self.init_distribution), 1e-10
-            )
+            self.init_distribution /= np.maximum(np.sum(self.init_distribution), 1e-10)
 
         if normalize_transition_probabilities:
             self.transition_probabilities /= np.sum(
-                self.transition_probabilities, 1,
-                keepdims=True
+                self.transition_probabilities, 1, keepdims=True
             )
 
     @property
@@ -473,12 +480,8 @@ class ConstantTransitionModel(object):
 
 
 class CategoricalStringObservationModel(ObservationModel):
-
     def __init__(
-            self,
-            observation_probabilities,
-            observations=None,
-            use_log_probabilities=True
+        self, observation_probabilities, observations=None, use_log_probabilities=True
     ):
         super().__init__(use_log_probabilities=use_log_probabilities)
 
@@ -487,9 +490,7 @@ class CategoricalStringObservationModel(ObservationModel):
         if observations is not None:
             self.observations = list(observations)
         else:
-            self.observations = [
-                str(i) for i in range(len(observation_probabilities))
-            ]
+            self.observations = [str(i) for i in range(len(observation_probabilities))]
 
     @property
     def observation_probabilities(self):
@@ -515,7 +516,7 @@ class WindowedObservationModel(ObservationModel):
     as observation model. Probability models can also be distances,
     in which case the different distances are inverted and softmaxed.
     
-    Only works with viterbi_algorithm_optimized_windowed
+    Only works with viterbi_algorithm_windowed
     
     Parameters
     ----------
@@ -586,7 +587,7 @@ def create_prob_models(no_global_states = 100,
     """
     example function to create a
     list of state-specific probability models
-    for use with viterbi_algorithm_optimized_windowed
+    for use with viterbi_algorithm_windowed
     and WindowedObservationModel
     
     Parameters
