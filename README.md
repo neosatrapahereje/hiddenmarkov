@@ -51,5 +51,5 @@ print("Sequence probability", prob)
 
 ## Licence
 
-The code in this package is licensed under the MIT Licence License. For details,
+The code in this package is licensed under the MIT Licence. For details,
 please see the [LICENSE](https://github.com/neosatrapahereje/hiddenmarkov/blob/main/LICENSE) file.
