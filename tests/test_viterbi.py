@@ -6,12 +6,15 @@ from hiddenmarkov import (
     HMM,
     ConstantTransitionModel,
     CategoricalStringObservationModel,
-    viterbi_algorithm
+    viterbi_algorithm,
 )
 
 
 class TestViterbi(unittest.TestCase):
     def test_wikipedia(self):
+        """
+        https://en.wikipedia.org/wiki/Viterbi_algorithm#Example
+        """
         obs = ("normal", "cold", "dizzy")
         observations = ("normal", "cold", "dizzy")
         states = ("Healthy", "Fever")
