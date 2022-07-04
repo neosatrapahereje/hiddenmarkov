@@ -16,11 +16,11 @@ class TestWindow(unittest.TestCase):
 
         transition_probabilities = np.array([[0.7, 0.3], [0.001, 0.999]])
 
-        init_distribution = np.array([0.999, 0.001])
+        init_probabilities = np.array([0.999, 0.001])
 
         transition_model = ConstantTransitionModel(
             transition_probabilities,
-            init_distribution=init_distribution,
+            init_probabilities=init_probabilities,
             use_log_probabilities=True,
         )
 

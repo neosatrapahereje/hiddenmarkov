@@ -9,7 +9,7 @@ import warnings
 import numpy as np
 
 from collections import defaultdict
-from typing import Any, Iterable, Optional, Tuple
+from typing import Any, Iterable, Optional, Tuple, ClassVar
 
 from .utils import inverted_softmax, softmax
 
@@ -22,6 +22,7 @@ class TransitionModel(object):
     """
     Base class for implementing a Transition Model
     """
+    init_probabilities: ClassVar[np.ndarray]
 
     def __init__(self, use_log_probabilities: bool = True) -> None:
         self.use_log_probabilities = use_log_probabilities
@@ -84,6 +85,8 @@ class HiddenMarkovModel(object):
         else:
             self.state_space: np.ndarray = np.arange(self.n_states)
 
+        self.forward_variable = self.transition_model.init_probabilities
+
     def find_best_sequence(
         self,
         observations: Any,
@@ -104,8 +107,12 @@ class HiddenMarkovModel(object):
         )
         return best_sequence, sequence_likelihood
 
-    def forward_algorithm_step(self, observtions, log_probabilities=False):
-        pass
+    def forward_algorithm_step(self, observations, log_probabilities=False):
+
+        observations_prob = self.observation_model(observations)
+
+        
+        # pass
 
 
 # alias
@@ -158,9 +165,9 @@ def viterbi_algorithm_naive(
     obs_prob = hmm.observation_model(observations[0])
 
     if log_probabilities:
-        omega[0, :] = obs_prob + hmm.transition_model.init_distribution
+        omega[0, :] = obs_prob + hmm.transition_model.init_probabilities
     else:
-        omega[0, :] = obs_prob * hmm.transition_model.init_distribution
+        omega[0, :] = obs_prob * hmm.transition_model.init_probabilities
 
     # Viterbi recursion
     for i, obs in enumerate(observations[1:], 1):
@@ -245,9 +252,9 @@ def viterbi_algorithm(hmm, observations, log_probabilities=True):
     obs_prob = hmm.observation_model(observations[0])
 
     if log_probabilities:
-        omega[0, :] = obs_prob + hmm.transition_model.init_distribution
+        omega[0, :] = obs_prob + hmm.transition_model.init_probabilities
     else:
-        omega[0, :] = obs_prob * hmm.transition_model.init_distribution
+        omega[0, :] = obs_prob * hmm.transition_model.init_probabilities
 
     omega_idx[0, :] = 0
 
@@ -349,9 +356,9 @@ def viterbi_algorithm_windowed(hmm, observations, log_probabilities=True):
     obs_prob, _ = hmm.observation_model(observations[0], current_window_idx[0])
 
     if log_probabilities:
-        omega[0, :] = obs_prob + hmm.transition_model.init_distribution
+        omega[0, :] = obs_prob + hmm.transition_model.init_probabilities
     else:
-        omega[0, :] = obs_prob * hmm.transition_model.init_distribution
+        omega[0, :] = obs_prob * hmm.transition_model.init_probabilities
 
     # Viterbi recursion
     if log_probabilities:
@@ -418,10 +425,10 @@ class ConstantTransitionModel(TransitionModel):
         A (n_states, n_states) matrix where component
         [i, j] represents the probability of going to state j
         coming from state i.
-    init_distribution: np.ndarray or None (optional)
+    init_probabilities: np.ndarray or None (optional)
         A 1D vector of length n_states defining the initial
         probabilities of each state
-    normalize_init_distribution: Bool (optional)
+    normalize_init_probabilities: Bool (optional)
         If True, the initial distribution will be normalized.
         Default is False.
     use_log_probabilities: Bool (optional)
@@ -432,8 +439,8 @@ class ConstantTransitionModel(TransitionModel):
     def __init__(
         self,
         transition_probabilities,
-        init_distribution=None,
-        normalize_init_distribution=False,
+        init_probabilities=None,
+        normalize_init_probabilities=False,
         normalize_transition_probabilities=False,
         use_log_probabilities=True,
     ):
@@ -441,16 +448,16 @@ class ConstantTransitionModel(TransitionModel):
         self.transition_probabilities = transition_probabilities
         self.n_states = len(transition_probabilities)
 
-        if init_distribution is None:
-            self.init_distribution = (
+        if init_probabilities is None:
+            self.init_probabilities = (
                 1.0 / float(self.n_states) * np.ones(self.n_states, dtype=float)
             )
         else:
-            self.init_distribution = init_distribution
+            self.init_probabilities = init_probabilities
 
-        if normalize_init_distribution:
+        if normalize_init_probabilities:
             # Normalize initial distribution
-            self.init_distribution /= np.maximum(np.sum(self.init_distribution), 1e-10)
+            self.init_probabilities /= np.maximum(np.sum(self.init_probabilities), 1e-10)
 
         if normalize_transition_probabilities:
             self.transition_probabilities /= np.sum(
@@ -458,15 +465,15 @@ class ConstantTransitionModel(TransitionModel):
             )
 
     @property
-    def init_distribution(self):
+    def init_probabilities(self):
         if self.use_log_probabilities:
             return self._log_init_dist
         else:
             return self._init_dist
 
-    @init_distribution.setter
-    def init_distribution(self, init_distribution):
-        self._init_dist = init_distribution
+    @init_probabilities.setter
+    def init_probabilities(self, init_probabilities):
+        self._init_dist = init_probabilities
         self._log_init_dist = np.log(self._init_dist)
 
     # @property

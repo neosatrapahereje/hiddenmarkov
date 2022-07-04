@@ -25,10 +25,10 @@ class TestViterbi(unittest.TestCase):
             observation_probabilities, obs
         )
 
-        init_distribution = np.array([0.6, 0.4])
+        init_probabilities = np.array([0.6, 0.4])
 
         transition_model = ConstantTransitionModel(
-            transition_probabilities, init_distribution
+            transition_probabilities, init_probabilities
         )
 
         hmm = HMM(observation_model, transition_model, state_space=states)
@@ -59,10 +59,10 @@ class TestViterbi(unittest.TestCase):
             observation_probabilities, obs
         )
 
-        init_distribution = np.array([0.5, 0.5])
+        init_probabilities = np.array([0.5, 0.5])
 
         transition_model = ConstantTransitionModel(
-            transition_probabilities, init_distribution
+            transition_probabilities, init_probabilities
         )
 
         hmm = HMM(observation_model, transition_model, state_space=states)
