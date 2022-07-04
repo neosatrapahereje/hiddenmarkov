@@ -11,6 +11,8 @@ import numpy as np
 from collections import defaultdict
 from typing import Any, Iterable, Optional, Tuple, ClassVar
 
+from scipy.special import logsumexp
+
 from .utils import inverted_softmax, softmax
 
 
@@ -22,10 +24,12 @@ class TransitionModel(object):
     """
     Base class for implementing a Transition Model
     """
+
     init_probabilities: ClassVar[np.ndarray]
+    n_states: int
 
     def __init__(self, use_log_probabilities: bool = True) -> None:
-        self.use_log_probabilities = use_log_probabilities
+        self.use_log_probabilities: bool = use_log_probabilities
 
     def __call__(self, i=None, j=None, *args, **kwargs):
         raise NotImplementedError
@@ -76,7 +80,7 @@ class HiddenMarkovModel(object):
         transition_model: TransitionModel,
         state_space: Optional[Iterable] = None,
     ) -> None:
-
+        super().__init__()
         self.observation_model: ObservationModel = observation_model
         self.transition_model: TransitionModel = transition_model
         self.n_states: int = self.transition_model.n_states
@@ -85,7 +89,7 @@ class HiddenMarkovModel(object):
         else:
             self.state_space: np.ndarray = np.arange(self.n_states)
 
-        self.forward_variable = self.transition_model.init_probabilities
+        self.forward_variable: Optional[np.ndarray] = None
 
     def find_best_sequence(
         self,
@@ -107,11 +111,18 @@ class HiddenMarkovModel(object):
         )
         return best_sequence, sequence_likelihood
 
-    def forward_algorithm_step(self, observations, log_probabilities=False):
+    def forward_algorithm_step(self, observation, log_probabilities=False):
 
-        observations_prob = self.observation_model(observations)
+        self.forward_variable = forward_algorithm_step(
+            observation_mode=self.observation_model,
+            transition_model=self.transition_model,
+            observation=observation,
+            forward_variable=self.forward_variable,
+            log_probabilities=log_probabilities,
+        )
+        current_state: int = np.argmax(self.forward_variable)
 
-        
+        return current_state
         # pass
 
 
@@ -410,6 +421,37 @@ def viterbi_algorithm_windowed(hmm, observations, log_probabilities=True):
     return current_window_idx[1:], path_likelihood
 
 
+def forward_algorithm_step(
+    observation_model: ObservationModel,
+    transition_model: TransitionModel,
+    observation: Any,
+    forward_variable: Optional[np.ndarray] = None,
+    log_probabilities: bool = False,
+) -> np.ndarray:
+    """
+    Step of the forward algorithm
+    """
+    # since computing the log of the matrix vector multiplication is not
+    # trivial (TODO: see if there is a clever way to do this multiplication
+    # efficiently)
+    transition_model.use_log_probabilities = False
+    observation_model.use_log_probabilities = log_probabilities
+    if forward_variable is None:
+        transition_prob: np.ndarray = transition_model.init_probabilities
+    else:
+        transition_prob: np.ndarray = np.dot(transition_model().T, forward_variable)
+
+    observation_prob: np.ndarray = observation_model(observation)
+    if log_probabilities:
+        forward_variable = observation_prob + np.log(transition_prob)
+        forward_variable -= logsumexp(forward_variable)
+    else:
+        forward_variable = observation_prob * transition_prob
+        forward_variable /= max(forward_variable.sum(), 1e-6)
+
+    return forward_variable
+
+
 class ConstantTransitionModel(TransitionModel):
     """
     Constant Transition Model
@@ -457,7 +499,9 @@ class ConstantTransitionModel(TransitionModel):
 
         if normalize_init_probabilities:
             # Normalize initial distribution
-            self.init_probabilities /= np.maximum(np.sum(self.init_probabilities), 1e-10)
+            self.init_probabilities /= np.maximum(
+                np.sum(self.init_probabilities), 1e-10
+            )
 
         if normalize_transition_probabilities:
             self.transition_probabilities /= np.sum(
