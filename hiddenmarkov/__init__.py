@@ -114,7 +114,7 @@ class HiddenMarkovModel(object):
     def forward_algorithm_step(self, observation, log_probabilities=False):
 
         self.forward_variable = forward_algorithm_step(
-            observation_mode=self.observation_model,
+            observation_model=self.observation_model,
             transition_model=self.transition_model,
             observation=observation,
             forward_variable=self.forward_variable,
