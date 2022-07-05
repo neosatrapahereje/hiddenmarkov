@@ -440,7 +440,6 @@ def forward_algorithm_step(
         transition_prob: np.ndarray = transition_model.init_probabilities
     else:
         transition_prob: np.ndarray = np.dot(transition_model().T, forward_variable)
-
     observation_prob: np.ndarray = observation_model(observation)
     if log_probabilities:
         forward_variable = observation_prob + np.log(transition_prob)
