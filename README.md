@@ -9,7 +9,7 @@ This library was created mostly for educational purposes and does not aim to hav
 Simple installation
 
 ```
-pip install hiddenmarkov
+pip install python-hiddenmarkov
 ```
 
 Develop version

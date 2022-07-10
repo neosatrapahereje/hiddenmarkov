@@ -7,7 +7,7 @@ import os
 from setuptools import find_packages, setup
 
 # Package meta-data.
-NAME = 'hiddenmarkov'
+NAME = 'python-hiddenmarkov'
 DESCRIPTION = 'A simple Python package for Hidden Markov Models'
 KEYWORDS = 'hmm hidden_Markov_models'
 URL = 'https://github.com/neosatrapahereje/hiddenmarkov'
