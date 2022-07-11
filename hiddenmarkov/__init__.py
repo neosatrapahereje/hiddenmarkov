@@ -17,7 +17,7 @@ from .utils import inverted_softmax, softmax
 
 
 # define a version variable
-__version__ = pkg_resources.get_distribution("hiddenmarkov").version
+__version__ = pkg_resources.get_distribution("python-hiddenmarkov").version
 
 
 class TransitionModel(object):
@@ -518,18 +518,6 @@ class ConstantTransitionModel(TransitionModel):
     def init_probabilities(self, init_probabilities):
         self._init_dist = init_probabilities
         self._log_init_dist = np.log(self._init_dist)
-
-    # @property
-    # def use_log_probabilities(self):
-    #     return self._use_log_probabilities
-
-    # @use_log_probabilities.setter
-    # def use_log_probabilities(self, use_log_probabilities):
-    #     self.use_log_probabilities = use_log_probabilities
-    #     if self.use_log_probabilities:
-    #         self.transition_probabilities = self._log_transition_prob
-    #     else:
-    #         self.transition_probabilities = self._transition_prob
 
     @property
     def transition_probabilities(self):

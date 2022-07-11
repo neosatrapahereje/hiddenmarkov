@@ -7,3 +7,7 @@ This is the first prerelease os the package. In this release, the implementation
 ## Version 0.1.1 (prerelease)
 
 Add forward algorithm.
+
+## Version 0.1.2 (prerelease)
+
+Code cleanup and iron things for PyPI

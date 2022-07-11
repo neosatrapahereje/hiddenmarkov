@@ -14,7 +14,7 @@ URL = 'https://github.com/neosatrapahereje/hiddenmarkov'
 EMAIL = 'carloscancinochacon@gmail.com'
 AUTHOR = 'Carlos Cancino-Chacón, Silvan Peter'
 REQUIRES_PYTHON = '>=3.6'
-VERSION = '0.1.1'
+VERSION = '0.1.2'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
