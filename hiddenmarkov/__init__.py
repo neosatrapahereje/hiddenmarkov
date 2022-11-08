@@ -31,7 +31,13 @@ class TransitionModel(object):
     def __init__(self, use_log_probabilities: bool = True) -> None:
         self.use_log_probabilities: bool = use_log_probabilities
 
-    def __call__(self, i=None, j=None, *args, **kwargs):
+    def __call__(
+        self,
+        i: Optional[int] = None,
+        j: Optional[int] = None,
+        *args,
+        **kwargs,
+    ) -> np.ndarray:
         raise NotImplementedError
 
 
@@ -69,9 +75,6 @@ class HiddenMarkovModel(object):
         Number of states
     state_space: np.array
 
-    TODO
-    ----
-    * Add forward algorithm
     """
 
     def __init__(
@@ -93,10 +96,31 @@ class HiddenMarkovModel(object):
 
     def find_best_sequence(
         self,
-        observations: Any,
+        observations: Iterable[Any],
         log_probabilities: bool = True,
         viterbi: str = "optimized",
     ) -> Tuple[np.ndarray, float]:
+        """
+        Find the best sequence of hidden states given a sequence of
+        observations using the viterbi algorithm
+
+        Parameters
+        ----------
+        observations : Iterable
+            The sequence of observations.
+        log_probabilities : bool
+            If True, log  probabilities will be used.
+        viterbi : {"optimized", "windowed", "naive"}
+            The implementation of the viterbi algorithm.
+
+        Returns
+        -------
+        best_sequence : np.ndarray
+            The best sequence of hidden states
+        sequence_likelihood : float
+            The probability (or log probability if  `log_probabilities=True`)
+            of the sequence of observations.
+        """
         if viterbi == "optimized":
             viterbi_fun = viterbi_algorithm
         elif viterbi == "windowed":
@@ -107,11 +131,17 @@ class HiddenMarkovModel(object):
             warnings.warn("viterbi needs to be 'optimized', 'windowed', or 'naive'")
             return
         best_sequence, sequence_likelihood = viterbi_fun(
-            hmm=self, observations=observations, log_probabilities=log_probabilities
+            hmm=self,
+            observations=observations,
+            log_probabilities=log_probabilities,
         )
         return best_sequence, sequence_likelihood
 
-    def forward_algorithm_step(self, observation, log_probabilities=False):
+    def forward_algorithm_step(
+        self,
+        observation: Any,
+        log_probabilities=False,
+    ) -> int:
 
         self.forward_variable = forward_algorithm_step(
             observation_model=self.observation_model,

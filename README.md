@@ -24,6 +24,9 @@ pip install -e .
 Example from [Wikipedia](https://en.wikipedia.org/wiki/Viterbi_algorithm#Example)
 
 ```python
+import numpy as np
+from hiddenmarkov import CategoricalStringObservationModel, ConstantTransitionModel, HMM
+
 obs = ("normal", "cold", "dizzy")
 observations = ("normal", "cold", "dizzy")
 states = ("Healthy", "Fever")
@@ -42,11 +45,12 @@ transition_model = ConstantTransitionModel(
 
 hmm = HMM(observation_model, transition_model, state_space=states)
 
-path, prob = viterbi_algorithm(hmm, observations, log_probabilities=False)
+path, prob = hmm.find_best_sequence(observations, log_probabilities=False)
 print("Example Wikipedia")
 print("Best sequence", path)
 print("Expected Sequence", ["Healthy", "Healthy", "Fever"])
 print("Sequence probability", prob)
+print("Expected probability", 0.01512)
 ```
 
 ## Licence
