@@ -2,7 +2,7 @@
 
 A simple Python library for Hidden Markov Models.
 
-This library was created mostly for educational purposes and does not aim to have the most efficient implementation.
+This library was created for educational purposes and does not aim to have the most efficient implementation.
 
 ## Setup
 
