@@ -10,8 +10,11 @@ Add forward algorithm.
 
 ## Version 0.1.2 (prerelease)
 
-Code cleanup and iron things for PyPI
+Code cleanup and iron things for PyPI.
 
 ## Version 0.1.3 (prerelease)
 
-Cleanup documentation and add typing hints
+* Rename `CategoricalStringObservationModel` to `CategoricalObservationModel`. The old name is now an alias but will be removed in a future release.
+* Cleanup documentation and add typing hints. 
+* Consistently declare encoding (utf-8) in all python files.
+* Add more tests to increase coverage (not yet 100%).
