@@ -129,8 +129,12 @@ class HiddenMarkovModel(object):
         elif viterbi == "naive":
             viterbi_fun = viterbi_algorithm_naive
         else:
-            warnings.warn("viterbi needs to be 'optimized', 'windowed', or 'naive'")
-            return
+            raise ValueError(
+                "`viterbi` needs to be 'optimized', 'windowed', or 'naive' "
+                f"but is {viterbi}"
+            )
+            # warnings.warn("viterbi needs to be 'optimized', 'windowed', or 'naive'")
+            # return
         best_sequence, sequence_likelihood = viterbi_fun(
             hmm=self,
             observations=observations,
@@ -621,6 +625,15 @@ class ConstantTransitionModel(TransitionModel):
 class CategoricalStringObservationModel(ObservationModel):
     """
     A Categorical observation model
+
+    Parameters
+    ----------
+    observation_probabilities : np.ndarray
+        A table of probabilities for each observation in each state.
+    observations : Iterable[str]
+        A list of the observations
+    use_log_probabilities : bool
+        If True, use log probabilities.
     """
 
     def __init__(
@@ -638,6 +651,10 @@ class CategoricalStringObservationModel(ObservationModel):
         else:
             self.observations = [str(i) for i in range(len(observation_probabilities))]
 
+        self.observation_indices = dict(
+            [(obs, i) for obs, i in zip(self.observations, range(len(observations)))]
+        )
+
     @property
     def observation_probabilities(self):
         if self.use_log_probabilities:
@@ -651,7 +668,8 @@ class CategoricalStringObservationModel(ObservationModel):
         self._log_obs_prob = np.log(self._obs_prob)
 
     def __call__(self, observation, *args, **kwargs):
-        idx = self.observations.index(observation)
+        idx = self.observation_indices[observation]
+        # idx = self.observations.index(observation)
         return self.observation_probabilities[idx]
 
 

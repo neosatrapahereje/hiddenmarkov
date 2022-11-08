@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Tests for windowed observation model.
+"""
 import unittest
 
 import numpy as np
@@ -232,7 +237,9 @@ class TestWindow(unittest.TestCase):
         )
 
         path, prob = hmm.find_best_sequence(
-            obs, log_probabilities=True, viterbi="windowed"
+            obs,
+            log_probabilities=True,
+            viterbi="windowed",
         )
 
         self.assertTrue(np.all(path == obs))

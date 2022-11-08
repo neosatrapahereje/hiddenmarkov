@@ -11,3 +11,7 @@ Add forward algorithm.
 ## Version 0.1.2 (prerelease)
 
 Code cleanup and iron things for PyPI
+
+## Version 0.1.3 (prerelease)
+
+Cleanup documentation and add typing hints
