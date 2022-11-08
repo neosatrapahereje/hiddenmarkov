@@ -622,15 +622,15 @@ class ConstantTransitionModel(TransitionModel):
             return self.transition_probabilities[i, j]
 
 
-class CategoricalStringObservationModel(ObservationModel):
+class CategoricalObservationModel(ObservationModel):
     """
-    A Categorical observation model
+    A Categorical observation model.
 
     Parameters
     ----------
     observation_probabilities : np.ndarray
         A table of probabilities for each observation in each state.
-    observations : Iterable[str]
+    observations : Iterable
         A list of the observations
     use_log_probabilities : bool
         If True, use log probabilities.
@@ -639,7 +639,7 @@ class CategoricalStringObservationModel(ObservationModel):
     def __init__(
         self,
         observation_probabilities: np.ndarray,
-        observations: Iterable[str] = None,
+        observations: Iterable[Any] = None,
         use_log_probabilities: bool = True,
     ):
         super().__init__(use_log_probabilities=use_log_probabilities)
@@ -671,6 +671,10 @@ class CategoricalStringObservationModel(ObservationModel):
         idx = self.observation_indices[observation]
         # idx = self.observations.index(observation)
         return self.observation_probabilities[idx]
+
+
+# deprecated alias
+CategoricalStringObservationModel = CategoricalObservationModel
 
 
 class WindowedObservationModel(ObservationModel):

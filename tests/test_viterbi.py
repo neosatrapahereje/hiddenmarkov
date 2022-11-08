@@ -11,7 +11,7 @@ import numpy as np
 from hiddenmarkov import (
     HMM,
     ConstantTransitionModel,
-    CategoricalStringObservationModel,
+    CategoricalObservationModel,
     viterbi_algorithm,
     viterbi_algorithm_naive,
 )
@@ -29,7 +29,7 @@ def wikipedia():
     observation_probabilities = np.array([[0.5, 0.1], [0.4, 0.3], [0.1, 0.6]])
     transition_probabilities = np.array([[0.7, 0.3], [0.4, 0.6]])
 
-    observation_model = CategoricalStringObservationModel(
+    observation_model = CategoricalObservationModel(
         observation_probabilities, obs
     )
 
@@ -138,7 +138,7 @@ class TestViterbi(unittest.TestCase):
         )
         transition_probabilities = np.array([[0.5, 0.5], [0.4, 0.6]])
 
-        observation_model = CategoricalStringObservationModel(
+        observation_model = CategoricalObservationModel(
             observation_probabilities, obs
         )
 
