@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Hidden Markov Models
@@ -9,7 +10,7 @@ import warnings
 import numpy as np
 
 from collections import defaultdict
-from typing import Any, Iterable, Optional, Tuple, ClassVar
+from typing import Any, Iterable, Optional, Tuple, ClassVar, List
 
 from scipy.special import logsumexp
 
@@ -140,9 +141,24 @@ class HiddenMarkovModel(object):
     def forward_algorithm_step(
         self,
         observation: Any,
-        log_probabilities=False,
+        log_probabilities: bool = False,
     ) -> int:
+        """
+        Find the hidden state that has the maximal probability
+        given the current observation.
 
+        Parameters
+        ----------
+        observation : Any
+            The current observation
+        log_probabilities: bool
+            If True, log  probabilities will be used.
+
+        Returns
+        -------
+        current_state : int
+            Index of the current hidden state.
+        """
         self.forward_variable = forward_algorithm_step(
             observation_model=self.observation_model,
             transition_model=self.transition_model,
@@ -255,7 +271,11 @@ def viterbi_algorithm_naive(
     return best_sequence, path_likelihood
 
 
-def viterbi_algorithm(hmm, observations, log_probabilities=True):
+def viterbi_algorithm(
+    hmm: HiddenMarkovModel,
+    observations: Iterable[Any],
+    log_probabilities: bool = True,
+) -> Tuple[np.ndarray, float]:
     """
     Find the most probable sequence of latent variables given
     a sequence of observations
@@ -339,7 +359,11 @@ def viterbi_algorithm(hmm, observations, log_probabilities=True):
     return best_sequence, path_likelihood
 
 
-def viterbi_algorithm_windowed(hmm, observations, log_probabilities=True):
+def viterbi_algorithm_windowed(
+    hmm: HiddenMarkovModel,
+    observations: Iterable[Any],
+    log_probabilities: bool = True,
+) -> Tuple[np.ndarray, float]:
     """
     Find the most probable sequence of latent variables given
     a sequence of observations.
@@ -386,7 +410,8 @@ def viterbi_algorithm_windowed(hmm, observations, log_probabilities=True):
     omega_idx = np.zeros((len(observations), hmm.n_states), dtype=int)
 
     # Initialize vector for holding the current best idx
-    # Current window id; start at state 0 and keep the state at the start of the current window
+    # Current window id; start at state 0 and keep the state at the
+    # start of the current window
     current_window_idx = np.zeros((len(observations) + 1), dtype=int)
 
     omega_idx[0, :] = 0
@@ -459,7 +484,28 @@ def forward_algorithm_step(
     log_probabilities: bool = False,
 ) -> np.ndarray:
     """
-    Step of the forward algorithm
+    Step of the forward algorithm.
+
+    Parameters
+    ----------
+    observation_model : ObservationModel
+        An observation model.
+    transition_model: TransitionModel
+        A transition model.
+    observation: Any
+        An observation. The observation needs to be of the same
+        type as specified by the observation model.
+    forward_variable : np.ndarray
+        The forward variable of the HMM. If none is given, the
+        initial probabilities specified by the transition model
+        will be used.
+    log_probabilities : bool
+        If true, use log probabilities.
+
+    Returns
+    -------
+    forward_variable : np.ndarray
+        The updated forward variable.
     """
     # since computing the log of the matrix vector multiplication is not
     # trivial (TODO: see if there is a clever way to do this multiplication
@@ -499,22 +545,22 @@ class ConstantTransitionModel(TransitionModel):
     init_probabilities: np.ndarray or None (optional)
         A 1D vector of length n_states defining the initial
         probabilities of each state
-    normalize_init_probabilities: Bool (optional)
+    normalize_init_probabilities: bool (optional)
         If True, the initial distribution will be normalized.
         Default is False.
-    use_log_probabilities: Bool (optional)
+    use_log_probabilities: bool (optional)
         If True, use log proabilities instead of norm proabilities
         (better for numerical stability)
     """
 
     def __init__(
         self,
-        transition_probabilities,
-        init_probabilities=None,
-        normalize_init_probabilities=False,
-        normalize_transition_probabilities=False,
-        use_log_probabilities=True,
-    ):
+        transition_probabilities: np.ndarray,
+        init_probabilities: Optional[np.ndarray] = None,
+        normalize_init_probabilities: bool = False,
+        normalize_transition_probabilities: bool = False,
+        use_log_probabilities: bool = True,
+    ) -> None:
         super().__init__(use_log_probabilities=use_log_probabilities)
         self.transition_probabilities = transition_probabilities
         self.n_states = len(transition_probabilities)
@@ -538,30 +584,30 @@ class ConstantTransitionModel(TransitionModel):
             )
 
     @property
-    def init_probabilities(self):
+    def init_probabilities(self) -> np.ndarray:
         if self.use_log_probabilities:
             return self._log_init_dist
         else:
             return self._init_dist
 
     @init_probabilities.setter
-    def init_probabilities(self, init_probabilities):
+    def init_probabilities(self, init_probabilities: np.ndarray) -> None:
         self._init_dist = init_probabilities
         self._log_init_dist = np.log(self._init_dist)
 
     @property
-    def transition_probabilities(self):
+    def transition_probabilities(self) -> np.ndarray:
         if self.use_log_probabilities:
             return self._log_transition_prob
         else:
             return self._transition_prob
 
     @transition_probabilities.setter
-    def transition_probabilities(self, transition_probabilities):
+    def transition_probabilities(self, transition_probabilities) -> None:
         self._transition_prob = transition_probabilities
         self._log_transition_prob = np.log(self._transition_prob)
 
-    def __call__(self, i=None, j=None):
+    def __call__(self, i=None, j=None) -> np.ndarray:
         if i is None and j is None:
             return self.transition_probabilities
         elif i is not None and j is None:
@@ -573,11 +619,15 @@ class ConstantTransitionModel(TransitionModel):
 
 
 class CategoricalStringObservationModel(ObservationModel):
+    """
+    A Categorical observation model
+    """
+
     def __init__(
         self,
-        observation_probabilities,
-        observations=None,
-        use_log_probabilities=True,
+        observation_probabilities: np.ndarray,
+        observations: Iterable[str] = None,
+        use_log_probabilities: bool = True,
     ):
         super().__init__(use_log_probabilities=use_log_probabilities)
 
@@ -627,7 +677,10 @@ class WindowedObservationModel(ObservationModel):
     """
 
     def __init__(
-        self, prob_models_at_state, use_inverted_probs=True, use_log_probabilities=True
+        self,
+        prob_models_at_state: List[tuple],
+        use_inverted_probs: bool = True,
+        use_log_probabilities: bool = True,
     ):
         super().__init__(use_log_probabilities=use_log_probabilities)
         self.use_log_probabilities = use_log_probabilities
