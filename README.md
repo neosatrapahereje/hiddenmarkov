@@ -1,5 +1,7 @@
 # hiddenmarkov
 
+[![PyPI version](https://badge.fury.io/py/python-hiddenmarkov.svg)](https://badge.fury.io/py/python-hiddenmarkov)
+
 A simple Python library for Hidden Markov Models.
 
 This library was created for educational purposes and does not aim to have the most efficient implementation.
